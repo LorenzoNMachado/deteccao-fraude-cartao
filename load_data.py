@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 
 engine = create_engine(
-    "postgresql+psycopg2://usuario:senha@localhost:5432/fraud_db"
+    postgresql+psycopg2://usuario:SUA_SENHA_AQUI@localhost:5432/fraud_db
 )
 
 csvfile = "csvfile/creditcard.csv"
