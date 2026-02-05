@@ -7,7 +7,11 @@ O diferencial desta solução é a otimização baseada no custo de negócio, pr
 1. Tecnologias e Técnicas
 Linguagem: Python
 
+Banco de Dados: PostgreSQL
+
 Processamento de Dados: Pandas, NumPy
+
+Infraestrutura: Docker (Containerização do Banco de Dados)
 
 Machine Learning: Scikit-learn (Random Forest, Logistic Regression)
 
@@ -16,6 +20,9 @@ Tratamento de Dados Desbalanceados: SMOTE (Synthetic Minority Over-sampling Tech
 Pré-processamento: RobustScaler (para lidar com outliers)
 
 Otimização: RandomizedSearchCV e Threshold Tuning
+
+Infraestrutura (Docker)
+Para garantir a portabilidade e um ambiente de desenvolvimento isolado, o armazenamento das transações é gerenciado por um container PostgreSQL. O script Python comunica-se com o container via porta 5432 para realizar a carga e consulta dos dados.
 
 2. Resultados e Impacto de Negócio
 O modelo foi ajustado para maximizar a captura de fraudes, minimizando o custo total para a instituição financeira.
