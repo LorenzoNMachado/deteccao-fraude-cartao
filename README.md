@@ -82,7 +82,7 @@ Baixe o dataset creditcard.csv do Kaggle e coloque-o na pasta csvfile/.
 Execute o script principal: python train_model.py.
 
 👤 Autor
-Lorenzo Nakayama
+Lorenzo Nakayama Machado
 
 Graduando em Ciência da Computação pela Pontifícia Universidade Católica do Paraná (PUCPR).
 
