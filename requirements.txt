@@ -6,6 +6,9 @@ scikit-learn==1.9.1
 imbalanced-learn==0.14.2
 matplotlib==3.11.2
 joblib==1.6.0
+shap==0.54.1
 SQLAlchemy==2.1.8
 psycopg2-binary==2.9.13
 python-dotenv==1.2.4
+fastapi==0.163.1
+uvicorn==0.54.0

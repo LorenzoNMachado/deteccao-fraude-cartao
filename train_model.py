@@ -22,6 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--csv', help='caminho do CSV (ignora DATABASE_URL)')
     parser.add_argument('--n-iter', type=int, default=10, help='combinações testadas na busca de hiperparâmetros')
+    parser.add_argument('--bootstrap', type=int, default=1000, help='reamostragens para os intervalos de confiança')
     parser.add_argument('--relatorios', default='reports', help='pasta de métricas e gráficos')
     parser.add_argument('--modelos', default='models', help='pasta do modelo salvo')
     args = parser.parse_args()
@@ -36,7 +37,7 @@ def main():
         sys.exit(f'Erro ao ler as transações de {origem}: {erro}')
     print(f'Dados carregados de {"banco" if database_url else csv}: {df.shape}')
 
-    treinar(df, args.relatorios, args.modelos, n_iter=args.n_iter)
+    treinar(df, args.relatorios, args.modelos, n_iter=args.n_iter, n_bootstrap=args.bootstrap)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 # Dados e modelos gerados localmente
 *.csv
+!reports/*.csv
 *.pkl
 *.joblib
 data/

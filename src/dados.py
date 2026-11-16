@@ -3,6 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 FEATURES = [f'V{i}' for i in range(1, 29)] + ['Amount']
+FEATURES_COM_HORA = FEATURES + ['Hora']
 ALVO = 'Class'
 TABELA = 'transactions'
 
@@ -29,6 +30,13 @@ def validar(df):
         raise ValueError('Há valores nulos nas transações.')
     if not set(df[ALVO].unique()) <= {0, 1}:
         raise ValueError(f'{ALVO} deve conter apenas 0 e 1.')
+
+
+def adicionar_hora(df):
+    """Hora do dia (0 a 24) a partir de `Time`, em segundos desde a primeira transação."""
+    novo = df.copy()
+    novo['Hora'] = (novo['Time'] % 86_400) / 3_600
+    return novo
 
 
 def remover_duplicadas(df):

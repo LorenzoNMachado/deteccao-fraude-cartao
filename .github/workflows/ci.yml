@@ -15,6 +15,40 @@ jobs:
           python-version: '3.12'
           cache: pip
       - name: Instala dependências
-        run: pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt pytest httpx
       - name: Testes (inclui o fluxo completo com dados sintéticos)
         run: pytest
+
+  integracao:
+    # Caminho real: PostgreSQL do docker-compose.yml -> load_data.py -> treino lendo do banco -> imagem da API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Instala dependências
+        run: pip install -r requirements.txt
+      - name: Sobe o PostgreSQL
+        run: |
+          cp .env.example .env
+          docker compose up -d --wait
+      - name: Carrega transações sintéticas no banco
+        run: |
+          mkdir -p data
+          python src/sintetico.py data/creditcard.csv
+          python load_data.py
+      - name: Treina lendo do banco
+        run: python train_model.py --n-iter 2 --bootstrap 100
+      - name: Constrói e testa a imagem da API
+        run: |
+          docker build -t fraude-api .
+          docker run -d --name api -p 8000:8000 fraude-api
+          for i in $(seq 1 30); do curl -sf localhost:8000/saude > /dev/null && break; sleep 2; done
+          curl -sf localhost:8000/saude
+          python -c "import pandas as pd; pd.read_csv('data/creditcard.csv').drop(columns='Class').head(3).to_json('corpo.json', orient='records')"
+          curl -sf -X POST localhost:8000/prever -H 'Content-Type: application/json' -d @corpo.json
+      - name: Logs da API
+        if: failure()
+        run: docker logs api || true

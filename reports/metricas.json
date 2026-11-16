@@ -4,28 +4,28 @@
     "duplicadas_removidas": 1081,
     "treino": 170235,
     "validacao": 56745,
-    "teste": 56746
+    "teste": 56746,
+    "fraudes_teste": 74
   },
   "custos": {
-    "fp": 5.0,
-    "fn_fixo": 20.0,
-    "fn_variavel": "Amount"
+    "custo_fp": 5.0,
+    "custo_fn_fixo": 20.0
   },
-  "comparacao_validacao": {
+  "comparacao_cv": {
     "Regressão Logística": {
       "pr_auc_cv": 0.7215989162104431,
       "pr_auc_cv_desvio": 0.09461377890520191,
-      "segundos": 8.5
+      "segundos": 6.9
     },
     "Random Forest": {
       "pr_auc_cv": 0.7742573528257134,
       "pr_auc_cv_desvio": 0.05837020908872557,
-      "segundos": 56.1
+      "segundos": 56.0
     },
     "Random Forest + SMOTE": {
       "pr_auc_cv": 0.7902973018213277,
       "pr_auc_cv_desvio": 0.04876813898952311,
-      "segundos": 105.1
+      "segundos": 107.1
     },
     "Gradient Boosting": {
       "pr_auc_cv": 0.7937379339954987,
@@ -44,66 +44,152 @@
     },
     "pr_auc_cv": 0.7967577625518087
   },
-  "pr_auc_validacao": 0.7846508122602733,
-  "limiar": 0.3,
+  "hora": {
+    "usa": false,
+    "pr_auc_cv_com_hora": 0.7900681610099044,
+    "pr_auc_cv_sem_hora": 0.7967577625518087
+  },
+  "calibracao": {
+    "fraudes_reais_validacao": 57,
+    "fraudes_previstas_sem_calibracao": 46.77229770372838,
+    "fraudes_previstas_calibrado": 67.08678036463661,
+    "brier_sem_calibracao": 0.00031186605714531875,
+    "brier_calibrado": 0.000319975003689539,
+    "usa_calibracao": false
+  },
+  "validacao": {
+    "limiar_unico": 0.3,
+    "custo_limiar_unico": 4769.860000000001,
+    "custo_regra_por_valor": 4974.860000000001
+  },
+  "politica": {
+    "tipo": "limiar",
+    "limiar": 0.3,
+    "custo_fp": 5.0,
+    "custo_fn_fixo": 20.0
+  },
   "teste": {
-    "pr_auc": 0.7929647826888624,
-    "roc_auc": 0.982883486959574,
-    "fraudes": 74,
-    "transacoes": 56746,
-    "valor_fraudes": 7727.67,
-    "custo_sem_modelo": 9207.67,
-    "limiar_custo": {
-      "limiar": 0.3,
+    "politica_escolhida": {
       "recall": 0.7432432432432432,
       "precision": 0.8870967741935484,
-      "f1": 0.8088235294117647,
       "fraudes_detectadas": 55,
       "fraudes_perdidas": 19,
       "bloqueios_indevidos": 7,
-      "custo": 3054.03
+      "custo": 3054.03,
+      "custo_sem_modelo": 9207.67,
+      "economia": 0.6683167402828294,
+      "pr_auc": 0.7929647826888624
     },
-    "limiar_0_5": {
-      "limiar": 0.5,
+    "regra_por_valor": {
+      "recall": 0.7567567567567568,
+      "precision": 0.6222222222222222,
+      "fraudes_detectadas": 56,
+      "fraudes_perdidas": 18,
+      "bloqueios_indevidos": 34,
+      "custo": 2931.77,
+      "custo_sem_modelo": 9207.67,
+      "economia": 0.6815948008562427,
+      "pr_auc": 0.7929647826888624
+    },
+    "limiar_0.30": {
+      "recall": 0.7432432432432432,
+      "precision": 0.8870967741935484,
+      "fraudes_detectadas": 55,
+      "fraudes_perdidas": 19,
+      "bloqueios_indevidos": 7,
+      "custo": 3054.03,
+      "custo_sem_modelo": 9207.67,
+      "economia": 0.6683167402828294,
+      "pr_auc": 0.7929647826888624
+    },
+    "limiar_0.50": {
       "recall": 0.7432432432432432,
       "precision": 0.9166666666666666,
-      "f1": 0.8208955223880597,
       "fraudes_detectadas": 55,
       "fraudes_perdidas": 19,
       "bloqueios_indevidos": 5,
-      "custo": 3044.03
+      "custo": 3044.03,
+      "custo_sem_modelo": 9207.67,
+      "economia": 0.6694027913685003,
+      "pr_auc": 0.7929647826888624
     }
   },
-  "importancia_permutacao": {
-    "V14": 0.14188,
-    "V4": 0.05855,
-    "V10": 0.05604,
-    "V12": 0.0426,
-    "V11": 0.01744,
-    "V7": 0.01358,
-    "V28": 0.00734,
-    "V8": 0.0071,
-    "V3": 0.00699,
-    "V1": 0.00631,
-    "V17": 0.00603,
-    "V21": 0.00591,
-    "V16": 0.00588,
-    "Amount": 0.00499,
-    "V20": 0.00496,
-    "V26": 0.00466,
-    "V24": 0.00373,
-    "V5": 0.00345,
-    "V19": 0.00284,
-    "V2": 0.00195,
-    "V6": 0.00173,
-    "V22": 0.00155,
-    "V18": 0.00064,
-    "V27": 9e-05,
-    "V23": -0.00013,
-    "V25": -0.0004,
-    "V9": -0.00074,
-    "V15": -0.00119,
-    "V13": -0.00147
+  "teste_ic95": {
+    "recall": [
+      0.6469782433521355,
+      0.8395502645502645
+    ],
+    "precision": [
+      0.8103067951318458,
+      0.9565372670807454
+    ],
+    "fraudes_detectadas": [
+      42.0,
+      69.0
+    ],
+    "fraudes_perdidas": [
+      11.0,
+      28.0
+    ],
+    "bloqueios_indevidos": [
+      3.0,
+      12.0
+    ],
+    "custo": [
+      773.5902500000007,
+      5925.572249999999
+    ],
+    "custo_sem_modelo": [
+      5352.764250000002,
+      14132.197
+    ],
+    "economia": [
+      0.41505044855742235,
+      0.902454734991149
+    ],
+    "pr_auc": [
+      0.7095670193143617,
+      0.8728318449818786
+    ]
   },
-  "segundos": 315
+  "importancia_permutacao": {
+    "V14": 0.14188131486582267,
+    "V4": 0.05854995160201211,
+    "V10": 0.05603582994275889,
+    "V12": 0.04260121765113987,
+    "V11": 0.017435253806297422,
+    "V7": 0.013582927694594682,
+    "V28": 0.007343858129560688,
+    "V8": 0.007098592845089446,
+    "V3": 0.006994060708186822,
+    "V1": 0.006308416830009355,
+    "V17": 0.006025915039550323,
+    "V21": 0.005913537088075871,
+    "V16": 0.005881563411774482,
+    "Amount": 0.004993186889214729,
+    "V20": 0.0049560661523502915,
+    "V26": 0.004661777732039463,
+    "V24": 0.003729485764201179,
+    "V5": 0.003452208530906353,
+    "V19": 0.002838803667948886,
+    "V2": 0.0019538201945082712,
+    "V6": 0.0017260780494913863,
+    "V22": 0.0015535268892649112,
+    "V18": 0.0006434208205384984,
+    "V27": 8.581705394734573e-05,
+    "V23": -0.00012741979752626254,
+    "V25": -0.000401720790011062,
+    "V9": -0.0007370035525005036,
+    "V15": -0.0011868052944575159,
+    "V13": -0.0014742594172550971
+  },
+  "producao": {
+    "modelo": "Gradient Boosting",
+    "ajustado": true,
+    "usa_hora": false,
+    "calibrado": false,
+    "transacoes_treino": 283726,
+    "time_max_treino": 172792.0
+  },
+  "segundos": 355
 }
