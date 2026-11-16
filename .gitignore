@@ -1,8 +1,12 @@
-
-*.pkl
-
-__pycache__/
-.venv/
-.env
-
+# Dados e modelos gerados localmente
 *.csv
+*.pkl
+*.joblib
+data/
+models/
+
+# Ambiente
+.env
+.venv/
+__pycache__/
+.pytest_cache/

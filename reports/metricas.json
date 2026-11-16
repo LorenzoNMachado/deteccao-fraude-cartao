@@ -1,0 +1,109 @@
+{
+  "dados": {
+    "transacoes": 283726,
+    "duplicadas_removidas": 1081,
+    "treino": 170235,
+    "validacao": 56745,
+    "teste": 56746
+  },
+  "custos": {
+    "fp": 5.0,
+    "fn_fixo": 20.0,
+    "fn_variavel": "Amount"
+  },
+  "comparacao_validacao": {
+    "Regressão Logística": {
+      "pr_auc_cv": 0.7215989162104431,
+      "pr_auc_cv_desvio": 0.09461377890520191,
+      "segundos": 8.5
+    },
+    "Random Forest": {
+      "pr_auc_cv": 0.7742573528257134,
+      "pr_auc_cv_desvio": 0.05837020908872557,
+      "segundos": 56.1
+    },
+    "Random Forest + SMOTE": {
+      "pr_auc_cv": 0.7902973018213277,
+      "pr_auc_cv_desvio": 0.04876813898952311,
+      "segundos": 105.1
+    },
+    "Gradient Boosting": {
+      "pr_auc_cv": 0.7937379339954987,
+      "pr_auc_cv_desvio": 0.043812374381468,
+      "segundos": 8.4
+    }
+  },
+  "modelo": "Gradient Boosting",
+  "ajustado": true,
+  "busca": {
+    "melhores_parametros": {
+      "modelo__l2_regularization": 2.566620013846402,
+      "modelo__learning_rate": 0.04312594322370855,
+      "modelo__max_leaf_nodes": 38,
+      "modelo__min_samples_leaf": 180
+    },
+    "pr_auc_cv": 0.7967577625518087
+  },
+  "pr_auc_validacao": 0.7846508122602733,
+  "limiar": 0.3,
+  "teste": {
+    "pr_auc": 0.7929647826888624,
+    "roc_auc": 0.982883486959574,
+    "fraudes": 74,
+    "transacoes": 56746,
+    "valor_fraudes": 7727.67,
+    "custo_sem_modelo": 9207.67,
+    "limiar_custo": {
+      "limiar": 0.3,
+      "recall": 0.7432432432432432,
+      "precision": 0.8870967741935484,
+      "f1": 0.8088235294117647,
+      "fraudes_detectadas": 55,
+      "fraudes_perdidas": 19,
+      "bloqueios_indevidos": 7,
+      "custo": 3054.03
+    },
+    "limiar_0_5": {
+      "limiar": 0.5,
+      "recall": 0.7432432432432432,
+      "precision": 0.9166666666666666,
+      "f1": 0.8208955223880597,
+      "fraudes_detectadas": 55,
+      "fraudes_perdidas": 19,
+      "bloqueios_indevidos": 5,
+      "custo": 3044.03
+    }
+  },
+  "importancia_permutacao": {
+    "V14": 0.14188,
+    "V4": 0.05855,
+    "V10": 0.05604,
+    "V12": 0.0426,
+    "V11": 0.01744,
+    "V7": 0.01358,
+    "V28": 0.00734,
+    "V8": 0.0071,
+    "V3": 0.00699,
+    "V1": 0.00631,
+    "V17": 0.00603,
+    "V21": 0.00591,
+    "V16": 0.00588,
+    "Amount": 0.00499,
+    "V20": 0.00496,
+    "V26": 0.00466,
+    "V24": 0.00373,
+    "V5": 0.00345,
+    "V19": 0.00284,
+    "V2": 0.00195,
+    "V6": 0.00173,
+    "V22": 0.00155,
+    "V18": 0.00064,
+    "V27": 9e-05,
+    "V23": -0.00013,
+    "V25": -0.0004,
+    "V9": -0.00074,
+    "V15": -0.00119,
+    "V13": -0.00147
+  },
+  "segundos": 315
+}

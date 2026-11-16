@@ -1,96 +1,130 @@
-Detecção de Fraude em Cartões de Crédito
-Sobre o Projeto
-Este projeto utiliza técnicas de Machine Learning para identificar transações fraudulentas em cartões de crédito. O principal desafio abordado foi o desequilíbrio dos dados (apenas 0,17% de fraudes no dataset do Kaggle).
+# Detecção de Fraude em Cartões de Crédito
 
-O diferencial desta solução é a otimização baseada no custo de negócio, priorizando a redução do prejuízo financeiro em vez de métricas puramente estatísticas.
+[![CI](https://github.com/LorenzoNMachado/deteccao-fraude-cartao/actions/workflows/ci.yml/badge.svg)](https://github.com/LorenzoNMachado/deteccao-fraude-cartao/actions/workflows/ci.yml)
 
-1. Tecnologias e Técnicas
-Linguagem: Python
+Modelo de Machine Learning para identificar transações fraudulentas, com o limiar de decisão escolhido pelo **custo de negócio**: o prejuízo de cada fraude não detectada contra o atrito de bloquear um cliente legítimo.
 
-Banco de Dados: PostgreSQL
+**Dataset:** [Credit Card Fraud Detection (Kaggle)](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud). São 284.807 transações de portadores europeus feitas em dois dias de setembro de 2013, com valores em euros. Só 0,17% delas são fraudes. As variáveis `V1` a `V28` vêm de uma PCA aplicada pelos autores para anonimizar os dados.
 
-Processamento de Dados: Pandas, NumPy
+## Resultados
 
-Infraestrutura: Docker (Containerização do Banco de Dados)
+Medidos no conjunto de **teste**, que reúne as 56.746 transações mais recentes (74 fraudes). O modelo nunca viu esses dados antes da avaliação final.
 
-Machine Learning: Scikit-learn (Random Forest, Logistic Regression)
+| | Sem modelo | Com o modelo (limiar 0,30) |
+|---|---|---|
+| Fraudes detectadas | 0 de 74 | **55 de 74** (recall 74,3%) |
+| Alertas que eram fraude | — | **88,7%** (precision) |
+| Clientes bloqueados indevidamente | 0 | **7** |
+| Custo total | €9.207,67 | **€3.054,03** (−67%) |
 
-Tratamento de Dados Desbalanceados: SMOTE (Synthetic Minority Over-sampling Technique)
+- **Modelo:** Gradient Boosting (`HistGradientBoostingClassifier`) com hiperparâmetros ajustados.
+- **Qualidade do ranking:** PR-AUC de 0,793 e ROC-AUC de 0,983.
+- **Variáveis mais importantes:** V14, V4, V10 e V12, pela importância por permutação.
 
-Pré-processamento: RobustScaler (para lidar com outliers)
+![Curva Precision-Recall](reports/figures/pr_curve.png)
 
-Otimização: RandomizedSearchCV e Threshold Tuning
+### Modelo de custo
 
-Infraestrutura (Docker)
-Para garantir a portabilidade e um ambiente de desenvolvimento isolado, o armazenamento das transações é gerenciado por um container PostgreSQL. O script Python comunica-se com o container via porta 5432 para realizar a carga e consulta dos dados.
+Os valores são **hipotéticos**; ajuste em `src/custo.py`:
 
-2. Resultados e Impacto de Negócio
-O modelo foi ajustado para maximizar a captura de fraudes, minimizando o custo total para a instituição financeira.
+- **Fraude não detectada (FN):** o valor da transação mais €20 de custo operacional (contestação).
+- **Bloqueio indevido (FP):** €5, pelo contato com o cliente e o atrito.
 
-Métrica	Resultado Alcançado
-Recall (Sensibilidade)	90,81%
-Precision	33,97%
-F1-Score	0,49
-Threshold Otimizado	0,10
+Usar o valor real da transação é importante porque a maioria das fraudes é pequena: a mediana é de €9,25 e a média de €122. Um custo fixo alto por fraude empurraria o limiar para bloquear muitos clientes legítimos sem necessidade.
 
-3. Análise de Custo
-Considerando um custo de R$ 2.500,00 por fraude perdida (Falso Negativo) e R$ 10,00 por cliente bloqueado indevidamente (Falso Positivo):
+![Custo por limiar](reports/figures/custo_vs_limiar.png)
 
-Custo Total Estimado: R$ 24.230,00
+### Comparação de modelos
 
-Fraudes Perdidas: Apenas 9 em um conjunto de teste de 56.962 transações.
+Os modelos foram comparados pela PR-AUC média numa validação cruzada temporal de 3 folds no treino:
 
-Clientes Bloqueados: 173 (atrito operacional aceitável perante a economia gerada).
+| Modelo | PR-AUC (CV) |
+|---|---|
+| Gradient Boosting | **0,794** (± 0,044) |
+| Random Forest + SMOTE | 0,790 (± 0,049) |
+| Random Forest | 0,774 (± 0,058) |
+| Regressão Logística | 0,722 (± 0,095) |
 
-## Visualizações
+Os dois primeiros empatam dentro da margem de erro. O Gradient Boosting foi escolhido por treinar mais de dez vezes mais rápido. O SMOTE não trouxe ganho claro sobre a Random Forest sem ele.
 
-O projeto inclui análises visuais detalhadas para interpretar o desempenho do modelo no contexto de detecção de fraude.
+## Metodologia
 
-### 1. Feature Importance
-Identifica as variáveis (decorrentes do PCA) que o modelo considerou mais críticas para a tomada de decisão. As componentes **V14, V10 e V12** foram os principais indicadores de comportamento fraudulento.
+1. **Limpeza:** remoção das 1.081 transações duplicadas, que poderiam cair ao mesmo tempo no treino e no teste.
+2. **Separação temporal:** treino com as 60% mais antigas, validação com as 20% seguintes e teste com as 20% mais recentes. É como o modelo seria usado na prática: aprende com o passado e prevê o futuro.
+3. **Escolha do modelo e dos hiperparâmetros:** validação cruzada temporal (`TimeSeriesSplit`) no treino, com a PR-AUC como métrica. Quando há SMOTE, ele fica **dentro** do pipeline do `imblearn`, para ser aplicado só nos dados de treino de cada fold.
+4. **Limiar de decisão:** é o de menor custo no conjunto de **validação**.
+5. **Avaliação:** feita uma única vez, no teste.
+6. **Artefato:** um único arquivo `models/modelo_fraude.joblib`, com pipeline, limiar e lista de variáveis. Não há como usar o modelo com o limiar ou o pré-processamento errado.
 
-![Feature Importance](./feature_importance.png)
+### O que mudou em relação à versão anterior
 
----
+A versão anterior relatava recall de 90,81% e custo de R$ 24.230. Reproduzi aquele script e encontrei dois vazamentos de informação que inflavam os resultados:
 
-### 2. Matriz de Confusão
-Visualização do desempenho do modelo no conjunto de teste (**threshold = 0.55**). Demonstra a eficácia em capturar fraudes mantendo um baixo índice de falsos positivos.
+- **O limiar era escolhido no próprio conjunto de teste.** Escolhendo na validação, o mesmo modelo passa de 347 para 863 bloqueios indevidos no teste, e a precisão cai de 20% para 9%.
+- **O SMOTE era aplicado antes da validação cruzada da busca de hiperparâmetros.** Fraudes sintéticas quase idênticas caíam no treino e na validação de cada fold, e o F1 da CV chegava a 0,9999. Com o SMOTE dentro do pipeline, o valor real é 0,839.
 
-![Matriz de Confusão](./confusion_matrix.png)
+Além disso, o modelo salvo usava um limiar ajustado para outro modelo. Os números atuais são menores em recall, mas são medidas honestas do que o modelo faz com transações que ele nunca viu.
 
----
+## Como executar
 
-### 3. Curva Precision-Recall
-Métrica essencial para dados altamente desbalanceados. A curva demonstra que o modelo mantém alta precisão mesmo quando o recall é elevado.
+Requer Python 3.12 ou mais novo.
 
-![Precision-Recall Curve](./pr_curve.png)
+```bash
+pip install -r requirements.txt
+```
 
----
+Baixe o `creditcard.csv` do [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) e coloque em `data/`.
 
-### 4. Métricas vs Threshold
-Este gráfico justifica a escolha do threshold de decisão, mostrando onde o **F1-Score é maximizado** e o equilíbrio entre Precision e Recall.
+**Opção 1: direto do CSV**
 
-![Metrics vs Threshold](./metrics_vs_threshold.png)
+```bash
+python train_model.py --csv data/creditcard.csv
+```
 
----
+**Opção 2: com PostgreSQL no Docker**
 
-### 5. Distribuição de Probabilidades Preditas
-Demonstra como o modelo separa as classes. A concentração de transações legítimas próximas de zero indica alta confiança do modelo na classe majoritária.
+```bash
+cp .env.example .env            # troque a senha no .env
+docker compose up -d            # sobe o PostgreSQL na porta 5432
+python load_data.py             # grava data/creditcard.csv na tabela transactions
+python train_model.py           # lê do banco (DATABASE_URL do .env)
+```
 
-![Probability Distribution](./prob_distribution.png)
+O treino leva cerca de 5 minutos. Ele gera `models/modelo_fraude.joblib`, `reports/metricas.json` e os gráficos em `reports/figures/`.
 
-5. Como Executar
-Clone o repositório.
+**Usar o modelo treinado**
 
-Instale as dependências: pip install -r requirements.txt.
+```python
+import sys; sys.path.insert(0, 'src')
+from modelos import carregar, prever
 
-Baixe o dataset creditcard.csv do Kaggle e coloque-o na pasta csvfile/.
+artefato = carregar('models/modelo_fraude.joblib')
+resultado = prever(artefato, transacoes)   # DataFrame com as colunas V1..V28 e Amount
+# colunas: prob_fraude, bloquear
+```
 
-Execute o script principal: python train_model.py.
+**Testes:** rode `pip install pytest` e depois `pytest`. Entre eles há um teste do fluxo completo com dados sintéticos, que o GitHub Actions executa a cada push.
 
-👤 Autor
-Lorenzo Nakayama Machado
+## Estrutura
 
-Graduando em Ciência da Computação pela Pontifícia Universidade Católica do Paraná (PUCPR).
+```
+train_model.py      treino (CLI)
+load_data.py        carga do CSV no PostgreSQL (CLI)
+src/dados.py        leitura (banco ou CSV), validação, duplicadas e separação temporal
+src/modelos.py      modelos candidatos, espaços de busca, salvar/carregar/prever
+src/custo.py        custo de negócio e escolha do limiar
+src/treino.py       fluxo completo e gráficos
+tests/              testes (pytest)
+reports/            métricas e gráficos da última execução
+docker-compose.yml  PostgreSQL
+```
 
-Interesse em IA, Ciência de Dados e Desenvolvimento Python.
+## Limitações
+
+- A validação tem 57 fraudes e o teste tem 74. Com tão poucos casos, uma fraude a mais ou a menos muda o recall em cerca de 1,4 ponto percentual.
+- Os custos são hipotéticos. Com outros valores, o limiar ideal muda, e o `src/custo.py` recalcula tudo.
+- As variáveis anonimizadas (PCA) impedem interpretar o significado de V14, V4 e das demais.
+
+## Autor
+
+**Lorenzo Nakayama Machado**. Graduando em Ciência da Computação pela Pontifícia Universidade Católica do Paraná (PUCPR). Interesse em IA, Ciência de Dados e Desenvolvimento Python.
