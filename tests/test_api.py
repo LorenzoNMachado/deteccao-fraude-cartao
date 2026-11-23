@@ -46,3 +46,18 @@ def test_prever_rejeita_transacao_incompleta(cliente, transacoes):
 
 def test_prever_rejeita_lista_vazia(cliente):
     assert cliente.post('/prever', json=[]).status_code == 422
+
+
+@pytest.mark.parametrize(
+    ('campo', 'valor'),
+    [('Amount', -1), ('Amount', float('nan')), ('Time', -1), ('V1', float('inf'))],
+)
+def test_prever_rejeita_valores_invalidos(cliente, transacoes, campo, valor):
+    corpo = _corpo(transacoes.head(1))
+    corpo[0][campo] = valor
+    assert cliente.post('/prever', json=corpo).status_code == 422
+
+
+def test_prever_rejeita_lote_maior_que_limite(cliente, transacoes):
+    transacao = _corpo(transacoes.head(1))[0]
+    assert cliente.post('/prever', json=[transacao] * 1001).status_code == 422

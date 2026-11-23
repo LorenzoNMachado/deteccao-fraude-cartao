@@ -8,9 +8,10 @@ import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Annotated
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel, Field, create_model
 
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
@@ -18,9 +19,10 @@ from modelos import carregar, explicar, prever  # noqa: E402
 
 Transacao = create_model(
     'Transacao',
-    Time=(float, Field(description='Segundos desde a primeira transação do período (usado para a hora do dia)')),
-    Amount=(float, Field(ge=0, description='Valor da transação em euros')),
-    **{f'V{i}': (float, ...) for i in range(1, 29)},
+    Time=(float, Field(ge=0, allow_inf_nan=False,
+                       description='Segundos desde a primeira transação do período (usado para a hora do dia)')),
+    Amount=(float, Field(ge=0, allow_inf_nan=False, description='Valor da transação em euros')),
+    **{f'V{i}': (float, Field(..., allow_inf_nan=False)) for i in range(1, 29)},
 )
 
 
@@ -53,7 +55,7 @@ def saude():
 
 
 @app.post('/prever', response_model=list[Resultado])
-def prever_transacoes(transacoes: list[Transacao]):
+def prever_transacoes(transacoes: Annotated[list[Transacao], Body(max_length=1000)]):
     if not transacoes:
         raise HTTPException(status_code=422, detail='Envie ao menos uma transação.')
     artefato = estado['artefato']
