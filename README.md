@@ -1,10 +1,14 @@
 # Detecção de Fraude em Cartões de Crédito
 
 [![CI](https://github.com/LorenzoNMachado/deteccao-fraude-cartao/actions/workflows/ci.yml/badge.svg)](https://github.com/LorenzoNMachado/deteccao-fraude-cartao/actions/workflows/ci.yml)
+[![License: MIT (code)](https://img.shields.io/badge/license-MIT%20(code)-green.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](SECURITY.md)
 
 Modelo de Machine Learning para identificar transações fraudulentas, com a política de bloqueio escolhida pelo **custo de negócio**: o prejuízo de cada fraude não detectada contra o atrito de bloquear um cliente legítimo. O projeto inclui uma API em FastAPI que devolve o risco de cada transação e o motivo de cada alerta.
 
 **Dataset:** [Credit Card Fraud Detection (Kaggle)](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud). São 284.807 transações de portadores europeus feitas em dois dias de setembro de 2013, com valores em euros. Só 0,17% delas são fraudes. As variáveis `V1` a `V28` vêm de uma PCA aplicada pelos autores para anonimizar os dados.
+
+O CSV não é redistribuído neste repositório. O Kaggle identifica o dataset como “Database: Open Database, Contents: Database Contents”; veja [Dados e licenças](DATA_SOURCES.md) para atribuição e restrições dos relatórios derivados.
 
 ## Resultados
 
@@ -124,7 +128,11 @@ docker build -t fraude-api . && docker run -p 8000:8000 fraude-api
 ```
 
 - `GET /saude`: status, política de bloqueio e informações do modelo.
-- `POST /prever`: recebe uma lista de transações (`Time`, `Amount`, `V1`..`V28`) e devolve, para cada uma, `prob_fraude`, `bloquear` e `motivos`. Os motivos vêm só para as transações bloqueadas.
+- `POST /prever`: recebe uma lista de 1 a 1.000 transações (`Time`, `Amount`, `V1`..`V28`) e devolve, para cada uma, `prob_fraude`, `bloquear` e `motivos`. Os motivos vêm só para as transações bloqueadas.
+
+A API rejeita com HTTP 422 listas vazias, transações incompletas, valores não finitos, valores negativos em `Time`/`Amount` e lotes acima de 1.000 transações. O corpo de `POST /prever` é limitado a 2 MiB; corpos maiores recebem HTTP 413. Os erros 422 incluem somente localização, mensagem e tipo da validação, sem repetir os valores enviados. Valores numéricos finitos elevados continuam aceitos: o contrato não inventa um teto para valores financeiros ou componentes PCA.
+
+Esses limites controlam o tamanho de uma requisição, mas não limitam chamadas por usuário nem protegem um serviço público contra abuso distribuído. Esta API de portfólio não tem autenticação ou rate limiting. Se for exposta em uma implantação, limite taxa, concorrência e tempo de execução no proxy ou gateway da implantação. O container executa como usuário sem privilégios. `joblib` desserializa arquivos com semântica de pickle; carregue somente o artefato local gerado pelo treinamento deste projeto.
 
 **Uso em Python**
 
@@ -166,6 +174,14 @@ docker-compose.yml  PostgreSQL
 - Os custos são hipotéticos. Com outros valores, a política ideal muda, e `src/custo.py` recalcula tudo.
 - São só dois dias de dados. Não dá para medir se o padrão das fraudes muda com o tempo (*drift*).
 - As variáveis anonimizadas (PCA) impedem interpretar o que V14, V4 e as demais significam.
+
+## Licença e segurança
+
+A licença MIT cobre o código original; não concede direitos sobre dados e
+artefatos derivados. A política para relatos privados está em
+[`SECURITY.md`](SECURITY.md). O CI executa testes com dados sintéticos e uma
+integração com PostgreSQL e Docker; isso não equivale a uma auditoria de
+segurança do sistema em produção.
 
 ## Autor
 
