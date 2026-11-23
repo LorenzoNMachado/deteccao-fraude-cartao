@@ -3,6 +3,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
+from api import MAX_REQUEST_BYTES
 from dados import FEATURES, adicionar_hora
 from modelos import candidatos, salvar
 
@@ -40,10 +41,23 @@ def test_prever_bloqueia_fraude_e_explica(cliente, transacoes):
     assert not r_legitima['bloquear'] and r_legitima['motivos'] == []
 
 
+def test_prever_aceita_lote_com_exatamente_mil_transacoes(cliente, transacoes):
+    legitima = transacoes[transacoes['Class'] == 0].head(1).copy()
+    legitima['Amount'] = 0.0
+    transacao = _corpo(legitima)[0]
+
+    resposta = cliente.post('/prever', json=[transacao] * 1000)
+
+    assert resposta.status_code == 200
+    assert len(resposta.json()) == 1000
+
+
 def test_prever_rejeita_transacao_incompleta(cliente, transacoes):
     corpo = _corpo(transacoes.head(1))
     del corpo[0]['V14']
-    assert cliente.post('/prever', json=corpo).status_code == 422
+    resposta = cliente.post('/prever', json=corpo)
+    assert resposta.status_code == 422
+    assert 'input' not in resposta.json()['detail'][0]
 
 
 def test_prever_rejeita_lista_vazia(cliente):
@@ -51,10 +65,17 @@ def test_prever_rejeita_lista_vazia(cliente):
 
 
 @pytest.mark.parametrize(
-    ('campo', 'valor'),
-    [('Amount', -1), ('Amount', float('nan')), ('Time', -1), ('V1', float('inf'))],
+    ('campo', 'valor', 'marcador'),
+    [
+        ('Amount', -1, '-1'),
+        ('Amount', float('nan'), 'NaN'),
+        ('Amount', float('inf'), 'Infinity'),
+        ('Amount', float('-inf'), '-Infinity'),
+        ('Time', -1, '-1'),
+        ('V1', float('inf'), 'Infinity'),
+    ],
 )
-def test_prever_rejeita_valores_invalidos(cliente, transacoes, campo, valor):
+def test_prever_rejeita_valores_invalidos(cliente, transacoes, campo, valor, marcador):
     corpo = _corpo(transacoes.head(1))
     corpo[0][campo] = valor
     resposta = cliente.post(
@@ -63,9 +84,37 @@ def test_prever_rejeita_valores_invalidos(cliente, transacoes, campo, valor):
         headers={'content-type': 'application/json'},
     )
     assert resposta.status_code == 422
-    assert 'input' not in resposta.json()['detail'][0]
+    detalhe = resposta.json()['detail'][0]
+    assert set(detalhe) == {'loc', 'msg', 'type'}
+    assert 'input' not in detalhe
+    assert marcador not in resposta.text
+
+
+@pytest.mark.parametrize(('campo', 'valor'), [('Amount', 1e100), ('V1', 1e100)])
+def test_prever_aceita_valores_finitos_muito_elevados(cliente, transacoes, campo, valor):
+    corpo = _corpo(transacoes[transacoes['Class'] == 0].head(1))
+    corpo[0]['Amount'] = 0.0
+    corpo[0][campo] = valor
+
+    resposta = cliente.post('/prever', json=corpo)
+
+    assert resposta.status_code == 200
+    assert len(resposta.json()) == 1
+    assert 0 <= resposta.json()[0]['prob_fraude'] <= 1
+
+
+def test_prever_rejeita_corpo_maior_que_limite_de_bytes(cliente):
+    resposta = cliente.post(
+        '/prever',
+        content=b' ' * (MAX_REQUEST_BYTES + 1),
+        headers={'content-type': 'application/json'},
+    )
+
+    assert resposta.status_code == 413
+    assert resposta.json() == {'detail': 'Corpo da requisição excede o limite de 2 MiB.'}
 
 
 def test_prever_rejeita_lote_maior_que_limite(cliente, transacoes):
     transacao = _corpo(transacoes.head(1))[0]
-    assert cliente.post('/prever', json=[transacao] * 1001).status_code == 422
+    resposta = cliente.post('/prever', json=[transacao] * 1001)
+    assert resposta.status_code == 422

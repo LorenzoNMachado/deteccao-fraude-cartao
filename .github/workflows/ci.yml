@@ -57,6 +57,9 @@ jobs:
       - name: Constrói e testa a imagem da API
         run: |
           docker build -t fraude-api .
+          test "$(docker run --rm --entrypoint id fraude-api -u)" -ne 0
+          docker run --rm --entrypoint sh fraude-api -c 'test -r /app/api.py && test -r /app/models/modelo_fraude.joblib && test -x /app/src'
+          docker run --rm --entrypoint python fraude-api -c "import joblib; joblib.load('/app/models/modelo_fraude.joblib')"
           docker run -d --name api -p 8000:8000 fraude-api
           for i in $(seq 1 30); do curl -sf localhost:8000/saude > /dev/null && break; sleep 2; done
           curl -sf localhost:8000/saude

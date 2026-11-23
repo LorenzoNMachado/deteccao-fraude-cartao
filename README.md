@@ -128,9 +128,11 @@ docker build -t fraude-api . && docker run -p 8000:8000 fraude-api
 ```
 
 - `GET /saude`: status, política de bloqueio e informações do modelo.
-- `POST /prever`: recebe uma lista de transações (`Time`, `Amount`, `V1`..`V28`) e devolve, para cada uma, `prob_fraude`, `bloquear` e `motivos`. Os motivos vêm só para as transações bloqueadas.
+- `POST /prever`: recebe uma lista de 1 a 1.000 transações (`Time`, `Amount`, `V1`..`V28`) e devolve, para cada uma, `prob_fraude`, `bloquear` e `motivos`. Os motivos vêm só para as transações bloqueadas.
 
-A API rejeita valores não finitos, valores negativos em `Time`/`Amount` e lotes acima de 1.000 transações. O container executa como usuário sem privilégios. `joblib` desserializa arquivos com semântica de pickle; carregue somente o artefato local gerado pelo treinamento deste projeto.
+A API rejeita com HTTP 422 listas vazias, transações incompletas, valores não finitos, valores negativos em `Time`/`Amount` e lotes acima de 1.000 transações. O corpo de `POST /prever` é limitado a 2 MiB; corpos maiores recebem HTTP 413. Os erros 422 incluem somente localização, mensagem e tipo da validação, sem repetir os valores enviados. Valores numéricos finitos elevados continuam aceitos: o contrato não inventa um teto para valores financeiros ou componentes PCA.
+
+Esses limites controlam o tamanho de uma requisição, mas não limitam chamadas por usuário nem protegem um serviço público contra abuso distribuído. Esta API de portfólio não tem autenticação ou rate limiting. Se for exposta em uma implantação, limite taxa, concorrência e tempo de execução no proxy ou gateway da implantação. O container executa como usuário sem privilégios. `joblib` desserializa arquivos com semântica de pickle; carregue somente o artefato local gerado pelo treinamento deste projeto.
 
 **Uso em Python**
 
