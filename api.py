@@ -11,7 +11,9 @@ from pathlib import Path
 from typing import Annotated
 
 import pandas as pd
-from fastapi import Body, FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, create_model
 
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
@@ -46,6 +48,16 @@ async def ciclo_de_vida(app):
 
 
 app = FastAPI(title='Detecção de Fraude em Cartões', lifespan=ciclo_de_vida)
+
+
+@app.exception_handler(RequestValidationError)
+async def tratar_erro_de_validacao(_request: Request, exc: RequestValidationError):
+    # Do not echo invalid values; NaN/Infinity would otherwise make JSONResponse fail.
+    detalhes = [
+        {'loc': erro['loc'], 'msg': erro['msg'], 'type': erro['type']}
+        for erro in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={'detail': detalhes})
 
 
 @app.get('/saude')

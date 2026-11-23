@@ -63,6 +63,7 @@ def test_prever_rejeita_valores_invalidos(cliente, transacoes, campo, valor):
         headers={'content-type': 'application/json'},
     )
     assert resposta.status_code == 422
+    assert 'input' not in resposta.json()['detail'][0]
 
 
 def test_prever_rejeita_lote_maior_que_limite(cliente, transacoes):
