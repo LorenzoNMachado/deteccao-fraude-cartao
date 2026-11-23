@@ -1,6 +1,6 @@
 # Versões usadas para gerar os resultados do README (Python 3.12+)
 pandas==3.1.1
-numpy==2.5.4
+numpy==2.5.5
 scipy==1.18.1
 scikit-learn==1.9.1
 imbalanced-learn==0.14.2
