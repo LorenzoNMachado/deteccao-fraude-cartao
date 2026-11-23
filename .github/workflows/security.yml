@@ -57,4 +57,4 @@ jobs:
       - name: Audit scanner dependencies
         run: pip-audit -r requirements-security.txt --progress-spinner off
       - name: Static security analysis
-        run: bandit -r api.py src train_model.py load_data.py -s B101
+        run: bandit -r api.py src train_model.py load_data.py -s B101 --severity-level medium

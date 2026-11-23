@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -55,7 +57,12 @@ def test_prever_rejeita_lista_vazia(cliente):
 def test_prever_rejeita_valores_invalidos(cliente, transacoes, campo, valor):
     corpo = _corpo(transacoes.head(1))
     corpo[0][campo] = valor
-    assert cliente.post('/prever', json=corpo).status_code == 422
+    resposta = cliente.post(
+        '/prever',
+        content=json.dumps(corpo, allow_nan=True),
+        headers={'content-type': 'application/json'},
+    )
+    assert resposta.status_code == 422
 
 
 def test_prever_rejeita_lote_maior_que_limite(cliente, transacoes):

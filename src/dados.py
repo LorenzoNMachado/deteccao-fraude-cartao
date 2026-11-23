@@ -13,7 +13,7 @@ def carregar(database_url=None, csv=None):
     if database_url:
         engine = create_engine(database_url)
         try:
-            return pd.read_sql(f'SELECT * FROM {TABELA}', engine)
+            return pd.read_sql_table(TABELA, engine)
         finally:
             engine.dispose()
     if csv:
